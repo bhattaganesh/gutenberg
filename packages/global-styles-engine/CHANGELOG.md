@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### New Features
+
+-   Accept `background.backgroundClip` as a valid theme.json setting ([#77141](https://github.com/WordPress/gutenberg/pull/77141)).
+
 ### Bug Fixes
 
 -   `getResolvedValue`: Return a copy when resolving a theme-relative (`file:./…`) URL instead of writing the resolved URL onto the given object, which could be the caller's own value or, via a `ref`, an object aliased by the user or theme config ([#82278](https://github.com/WordPress/gutenberg/pull/82278)).
@@ -23,6 +27,7 @@
 
 -   Report changes to site-wide border, shadow, outline, filter and dimensions in the global styles changelist. These are rendered by the styles engine but were not compared, so changing only one of them was reported as no change at all ([#81407](https://github.com/WordPress/gutenberg/pull/81407)).
 -   Render block element styles defined only inside responsive viewport states.
+
 ## 1.19.0 (2026-07-29)
 
 ### Internal
