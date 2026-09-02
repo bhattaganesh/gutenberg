@@ -16,6 +16,7 @@
 -   Post actions: Append an ellipsis (`…`) to the "Set as homepage" and "Set as posts page" action labels, which open a confirmation dialog, following the menu ellipsis guideline. The dialog titles keep the ellipsis-free wording. ([#81994](https://github.com/WordPress/gutenberg/pull/81994))
 -   Show a "Privacy Policy Page" badge in the document bar and the post card panel for the page assigned in Settings > Privacy, alongside the existing "Homepage" and "Posts Page" badges ([#82422](https://github.com/WordPress/gutenberg/pull/82422)).
 -   `PostCardPanel`: Migrate the page-type badge from the private Components `Badge` to `@wordpress/ui` `Badge`. ([#82500](https://github.com/WordPress/gutenberg/pull/82500)).
+-   `PostTaxonomiesFlatTermSelector`: The field renders with the `SearchableChipSelectControl` component of `@wordpress/ui` instead of `FormTokenField` ([#80967](https://github.com/WordPress/gutenberg/pull/80967)).
 
 ### Bug Fixes
 
