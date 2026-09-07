@@ -328,6 +328,66 @@ describe( 'style composition', () => {
 		} );
 	} );
 
+	test.each( [
+		{ name: 'zero tracks', columns: 0, rows: 0 },
+		{ name: 'empty responsive tracks', columns: [], rows: [] },
+		{
+			name: 'undefined responsive tracks',
+			columns: [ undefined ],
+			rows: [ undefined ],
+		},
+		{ name: 'zero responsive tracks', columns: [ 0 ], rows: [ 0 ] },
+	] )(
+		'preserves consumer styles with $name and overrides them with explicit values',
+		( { columns, rows } ) => {
+			const consumerStyle = document.createElement( 'style' );
+			consumerStyle.textContent =
+				'.grid-consumer { align-items: end; justify-content: end; grid-template-columns: 100px; grid-template-rows: 90px; }';
+			document.head.prepend( consumerStyle );
+
+			try {
+				const { rerender } = render(
+					<Grid
+						data-testid="grid"
+						className="grid-consumer"
+						columns={ columns }
+						rows={ rows }
+					>
+						<View />
+					</Grid>
+				);
+				expect( screen.getByTestId( 'grid' ) ).toHaveStyle( {
+					alignItems: 'end',
+					justifyContent: 'end',
+					gridTemplateColumns: '100px',
+					gridTemplateRows: '90px',
+				} );
+
+				rerender(
+					<Grid
+						data-testid="grid"
+						className="grid-consumer"
+						columns={ 0 }
+						align="start"
+						justify="start"
+						templateColumns="200px"
+						templateRows="120px"
+					>
+						<View />
+					</Grid>
+				);
+				expect( screen.getByTestId( 'grid' ) ).toHaveStyle( {
+					alignItems: 'start',
+					justifyContent: 'start',
+					gridTemplateColumns: '200px',
+					gridTemplateRows: '120px',
+				} );
+			} finally {
+				consumerStyle.remove();
+			}
+		}
+	);
+
 	test( 'CSS-wide values apply to the layout properties', () => {
 		render(
 			<div
