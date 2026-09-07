@@ -13,7 +13,6 @@
 			"packages/components/src/elevation/test/index.jsdom.test.tsx",
 			"packages/components/src/flex/test/index.jsdom.test.tsx",
 			"packages/components/src/form-file-upload/test/index.jsdom.test.tsx",
-			"packages/components/src/grid/test/grid.jsdom.test.tsx",
 			"packages/components/src/heading/test/index.jsdom.test.tsx",
 			"packages/components/src/icon/test/index.jsdom.test.tsx",
 			"packages/components/src/input-control/test/index.jsdom.test.tsx",

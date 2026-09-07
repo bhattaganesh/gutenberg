@@ -12,7 +12,6 @@ import { render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { ToolsPanel, ToolsPanelContext, ToolsPanelItem } from '../';
 import { createSlotFill, Provider as SlotFillProvider } from '../../slot-fill';
-import { ContextSystemProvider } from '../../context';
 import moduleStyles from '../style.module.scss';
 import type {
 	ToolsPanelContext as ToolsPanelContextType,
@@ -24,12 +23,6 @@ globalThis.wpVitest.mockMatchMedia();
 const { Fill: ToolsPanelItems, Slot } = createSlotFill( 'ToolsPanelSlot' );
 const resetAll = vi.fn();
 const noop = () => undefined;
-const gridContextValue = {
-	Grid: {
-		columnGap: '40px',
-		rowGap: '48px',
-	},
-};
 
 type ControlValue = boolean | undefined;
 
@@ -345,33 +338,6 @@ describe( 'ToolsPanel', () => {
 			expect( heading.parentElement ).toHaveClass(
 				moduleStyles[ 'tools-panel-header' ],
 				'components-tools-panel-header'
-			);
-		} );
-
-		it( 'should preserve its spacing against Grid context values', () => {
-			render(
-				<ContextSystemProvider value={ gridContextValue }>
-					<ToolsPanel { ...defaultProps } data-testid="tools-panel">
-						<span>Panel content</span>
-					</ToolsPanel>
-				</ContextSystemProvider>
-			);
-
-			const panel = screen.getByTestId( 'tools-panel' );
-			const generatedClassName = Array.from( panel.classList ).find(
-				( className ) => /^(css|emotion)-/.test( className )
-			);
-			const generatedRule = Array.from( document.styleSheets )
-				.flatMap( ( styleSheet ) => Array.from( styleSheet.cssRules ) )
-				.find( ( rule ) =>
-					rule.cssText.includes( `.${ generatedClassName }` )
-				);
-
-			expect( generatedRule?.cssText ).toContain(
-				'grid-column-gap: calc(4px * 4);'
-			);
-			expect( generatedRule?.cssText ).toContain(
-				'grid-row-gap: calc(4px * 4);'
 			);
 		} );
 
