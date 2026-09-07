@@ -18,6 +18,7 @@
 ### Internal
 
 -   `BlockPreview`: Stop applying the private `Disabled` component class name to block previews ([#82651](https://github.com/WordPress/gutenberg/pull/82651)).
+-   Remove the `react-autosize-textarea` dependency. `PlainText`, the block "Edit as HTML" field and the post editor's "Code editor" view now auto-grow with the CSS `field-sizing: content` property instead ([#64208](https://github.com/WordPress/gutenberg/pull/64208)).
 -   Pattern Overrides Dropdown: Use `Text` from `@wordpress/ui` instead of `__experimentalText` from `@wordpress/components` ([#77492](https://github.com/WordPress/gutenberg/pull/77492)).
 -   Allowed Blocks Modal: Use `Text` from `@wordpress/ui` instead of `__experimentalText` from `@wordpress/components` ([#78119](https://github.com/WordPress/gutenberg/pull/78119)).
 -   Block Switcher: Use `Text` from `@wordpress/ui` instead of `__experimentalText` from `@wordpress/components` for the bindings hint ([#77366](https://github.com/WordPress/gutenberg/pull/77366)).
