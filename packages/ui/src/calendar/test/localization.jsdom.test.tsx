@@ -360,6 +360,16 @@ describe( 'Calendar text direction fallback', () => {
 	);
 
 	beforeAll( () => {
+		// Emulate an environment that predates `getTextInfo()` by exposing the
+		// legacy `textInfo` accessor in its place. Removing `getTextInfo()`
+		// alone no longer reaches that branch: engines that dropped `textInfo`
+		// leave neither, so the fallback language list answers instead.
+		Object.defineProperty( Intl.Locale.prototype, 'textInfo', {
+			configurable: true,
+			get(): { direction?: string } | undefined {
+				return getTextInfoDescriptor?.value.call( this );
+			},
+		} );
 		Object.defineProperty( Intl.Locale.prototype, 'getTextInfo', {
 			configurable: true,
 			value: undefined,
@@ -367,6 +377,7 @@ describe( 'Calendar text direction fallback', () => {
 	} );
 
 	afterAll( () => {
+		delete ( Intl.Locale.prototype as { textInfo?: unknown } ).textInfo;
 		if ( getTextInfoDescriptor ) {
 			Object.defineProperty(
 				Intl.Locale.prototype,
