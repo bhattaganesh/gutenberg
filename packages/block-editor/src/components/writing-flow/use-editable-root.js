@@ -84,8 +84,13 @@ export default function useEditableRoot() {
 				// Only do so if that element belongs to the selected block:
 				// when the selection moved to another block through the
 				// store, the stale DOM selection must not reclaim block
-				// selection through its focus handler.
-				if ( node.ownerDocument.activeElement === node ) {
+				// selection through its focus handler. The document must
+				// have focus: while a toolbar button in the parent document
+				// has it, the wrapper is only the stale active element.
+				if (
+					node.ownerDocument.activeElement === node &&
+					node.ownerDocument.hasFocus()
+				) {
 					const editable = getSelectionEditableElement(
 						node.ownerDocument.defaultView.getSelection(),
 						node
