@@ -3,6 +3,7 @@ import { useViewportMatch } from '@wordpress/compose';
 import { Button } from '@wordpress/components';
 import { useCallback, useEffect, useMemo } from '@wordpress/element';
 import { MediaCategoryPanel } from './media-panel';
+import MediaSources from './media-sources';
 import MediaUploadCheck from '../../media-upload/check';
 import MediaUpload from '../../media-upload';
 import { useMediaCategories } from './hooks';
@@ -12,8 +13,6 @@ import CategoryTabs from '../category-tabs';
 import InserterNoResults from '../no-results';
 
 const ALLOWED_MEDIA_TYPES = [ 'image', 'video', 'audio' ];
-
-const getCategoryLabel = ( category ) => category.label;
 
 function MediaTab( {
 	rootClientId,
@@ -25,8 +24,8 @@ function MediaTab( {
 	const mediaCategories = useMediaCategories( rootClientId );
 	const isMobile = useViewportMatch( 'medium', '<' );
 	// Behind the `gutenberg-media-inserter` experiment: the Media tab becomes a
-	// single sidebar of drill-in panels instead of a category list beside a
-	// flyout panel.
+	// single column of stacked, collapsible source panels instead of a category
+	// list beside a flyout panel.
 	const isMediaInserterRedesign = !! window.__experimentalMediaInserter;
 	const baseCssClass = 'block-editor-inserter__media-tabs';
 	const onSelectMedia = useCallback(
@@ -104,26 +103,17 @@ function MediaTab( {
 	);
 
 	if ( isMediaInserterRedesign ) {
-		// The redesigned tab is a single column at every viewport: the root
-		// screen lists the media sources, and choosing one drills into its
-		// panel. The category panel `children` (the flyout beside the tab
-		// list) is not rendered on this path.
+		// The redesigned tab stacks every media source as a collapsible panel
+		// in a single column, at every viewport, with the first one open. The
+		// category panel `children` (the flyout beside the tab list) is not
+		// rendered on this path.
 		return (
-			<MobileTabNavigation
+			<MediaSources
 				categories={ categories }
-				className="block-editor-inserter__media-navigation"
-				screenClassName="block-editor-inserter__media-mobile-screen"
-				getScreenTitle={ getCategoryLabel }
+				rootClientId={ rootClientId }
+				onInsert={ onInsert }
 				footer={ mediaLibraryButton }
-			>
-				{ ( category ) => (
-					<MediaCategoryPanel
-						onInsert={ onInsert }
-						rootClientId={ rootClientId }
-						category={ category }
-					/>
-				) }
-			</MobileTabNavigation>
+			/>
 		);
 	}
 
