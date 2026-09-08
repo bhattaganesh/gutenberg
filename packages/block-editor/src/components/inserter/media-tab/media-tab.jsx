@@ -13,6 +13,8 @@ import InserterNoResults from '../no-results';
 
 const ALLOWED_MEDIA_TYPES = [ 'image', 'video', 'audio' ];
 
+const getCategoryLabel = ( category ) => category.label;
+
 function MediaTab( {
 	rootClientId,
 	selectedCategory,
@@ -22,6 +24,10 @@ function MediaTab( {
 } ) {
 	const mediaCategories = useMediaCategories( rootClientId );
 	const isMobile = useViewportMatch( 'medium', '<' );
+	// Behind the `gutenberg-media-inserter` experiment: the Media tab becomes a
+	// single sidebar of drill-in panels instead of a category list beside a
+	// flyout panel.
+	const isMediaInserterRedesign = !! window.__experimentalMediaInserter;
 	const baseCssClass = 'block-editor-inserter__media-tabs';
 	const onSelectMedia = useCallback(
 		( media ) => {
@@ -67,6 +73,60 @@ function MediaTab( {
 		return <InserterNoResults />;
 	}
 
+	const mediaLibraryButton = (
+		<MediaUploadCheck>
+			<MediaUpload
+				multiple={ false }
+				onSelect={ onSelectMedia }
+				allowedTypes={ ALLOWED_MEDIA_TYPES }
+				render={ ( { open } ) => (
+					<Button
+						__next40pxDefaultSize
+						onClick={ ( event ) => {
+							// Safari doesn't emit a focus event on button elements when
+							// clicked and we need to manually focus the button here.
+							// The reason is that core's Media Library modal explicitly triggers a
+							// focus event and therefore a `blur` event is triggered on a different
+							// element, which doesn't contain the `data-unstable-ignore-focus-outside-for-relatedtarget`
+							// attribute making the Inserter dialog to close.
+							event.target.focus();
+							open();
+						} }
+						className="block-editor-inserter__media-library-button"
+						variant="secondary"
+						data-unstable-ignore-focus-outside-for-relatedtarget=".media-modal"
+					>
+						{ __( 'Open Media Library' ) }
+					</Button>
+				) }
+			/>
+		</MediaUploadCheck>
+	);
+
+	if ( isMediaInserterRedesign ) {
+		// The redesigned tab is a single column at every viewport: the root
+		// screen lists the media sources, and choosing one drills into its
+		// panel. The category panel `children` (the flyout beside the tab
+		// list) is not rendered on this path.
+		return (
+			<MobileTabNavigation
+				categories={ categories }
+				className="block-editor-inserter__media-navigation"
+				screenClassName="block-editor-inserter__media-mobile-screen"
+				getScreenTitle={ getCategoryLabel }
+				footer={ mediaLibraryButton }
+			>
+				{ ( category ) => (
+					<MediaCategoryPanel
+						onInsert={ onInsert }
+						rootClientId={ rootClientId }
+						category={ category }
+					/>
+				) }
+			</MobileTabNavigation>
+		);
+	}
+
 	return (
 		<>
 			{ ! isMobile && (
@@ -78,33 +138,7 @@ function MediaTab( {
 					>
 						{ children }
 					</CategoryTabs>
-					<MediaUploadCheck>
-						<MediaUpload
-							multiple={ false }
-							onSelect={ onSelectMedia }
-							allowedTypes={ ALLOWED_MEDIA_TYPES }
-							render={ ( { open } ) => (
-								<Button
-									__next40pxDefaultSize
-									onClick={ ( event ) => {
-										// Safari doesn't emit a focus event on button elements when
-										// clicked and we need to manually focus the button here.
-										// The reason is that core's Media Library modal explicitly triggers a
-										// focus event and therefore a `blur` event is triggered on a different
-										// element, which doesn't contain the `data-unstable-ignore-focus-outside-for-relatedtarget`
-										// attribute making the Inserter dialog to close.
-										event.target.focus();
-										open();
-									} }
-									className="block-editor-inserter__media-library-button"
-									variant="secondary"
-									data-unstable-ignore-focus-outside-for-relatedtarget=".media-modal"
-								>
-									{ __( 'Open Media Library' ) }
-								</Button>
-							) }
-						/>
-					</MediaUploadCheck>
+					{ mediaLibraryButton }
 				</div>
 			) }
 			{ isMobile && (

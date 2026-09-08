@@ -1,3 +1,4 @@
+import clsx from 'clsx';
 import { __, isRTL } from '@wordpress/i18n';
 import {
 	__experimentalItemGroup as ItemGroup,
@@ -38,17 +39,41 @@ function ScreenHeader( { title } ) {
 	);
 }
 
+const getDefaultScreenTitle = () => __( 'Back' );
+
+/**
+ * A drill-in list of categories: the root screen lists them, and choosing one
+ * navigates to a screen rendering that category's content beneath a header
+ * with a back button.
+ *
+ * @param {Object}   props
+ * @param {Object[]} props.categories        The categories to list; each needs a `name` and `label`.
+ * @param {Function} props.children          Render function receiving the category for its screen.
+ * @param {string}   [props.screenClassName] Class name applied to each category screen.
+ * @param {string}   [props.className]       Class name applied to the navigator.
+ * @param {Function} [props.getScreenTitle]  Returns the header title for a category's screen.
+ * @param {Element}  [props.footer]          Content rendered beneath the list on the root screen.
+ */
 export default function MobileTabNavigation( {
 	categories,
 	children,
 	screenClassName,
+	className,
+	getScreenTitle = getDefaultScreenTitle,
+	footer,
 } ) {
 	return (
 		<Navigator
 			initialPath="/"
-			className="block-editor-inserter__mobile-tab-navigation"
+			className={ clsx(
+				'block-editor-inserter__mobile-tab-navigation',
+				className
+			) }
 		>
-			<Navigator.Screen path="/">
+			<Navigator.Screen
+				path="/"
+				className="block-editor-inserter__mobile-tab-navigation-root"
+			>
 				<ItemGroup>
 					{ categories.map( ( category ) => (
 						<Navigator.Button
@@ -68,6 +93,7 @@ export default function MobileTabNavigation( {
 						</Navigator.Button>
 					) ) }
 				</ItemGroup>
+				{ footer }
 			</Navigator.Screen>
 			{ categories.map( ( category ) => (
 				<Navigator.Screen
@@ -75,7 +101,7 @@ export default function MobileTabNavigation( {
 					className={ screenClassName }
 					path={ `/category/${ category.name }` }
 				>
-					<ScreenHeader title={ __( 'Back' ) } />
+					<ScreenHeader title={ getScreenTitle( category ) } />
 					{ children( category ) }
 				</Navigator.Screen>
 			) ) }

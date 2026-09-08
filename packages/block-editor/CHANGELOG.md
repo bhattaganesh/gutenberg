@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Experimental
+
+-   Inserter: Behind the `gutenberg-media-inserter` experiment, render the Media tab as a single sidebar of drill-in panels, one per media source, in place of the category list and flyout panel ([#TBD](https://github.com/WordPress/gutenberg/pull/TBD)).
+
 ### New Features
 
 -   `BackgroundImageControl`: Support setting the background image from a URL, through the URL field in the media replace popover ([#82230](https://github.com/WordPress/gutenberg/pull/82230)).
