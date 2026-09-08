@@ -16,8 +16,7 @@ function useAddedBy( type: string, id: any ) {
 			   entity record union does not know about. */
 			const _record = ( getEditedEntityRecord( 'postType', type, id ) ||
 				undefined ) as
-				| { author?: number; author_text?: string }
-				| undefined;
+				{ author?: number; author_text?: string } | undefined;
 			return {
 				author: _record?.author ? getUser( _record.author ) : null,
 				authorText: _record?.author_text,

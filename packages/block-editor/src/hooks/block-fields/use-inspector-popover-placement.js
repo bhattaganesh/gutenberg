@@ -11,6 +11,6 @@ export function useInspectorPopoverPlacement(
 					// For non-mobile, inner sidebar width (248px) - button width (24px) - border (1px) + padding (16px) + spacing (20px)
 					offset: isControl ? 35 : 259,
 				},
-		  }
+			}
 		: {};
 }

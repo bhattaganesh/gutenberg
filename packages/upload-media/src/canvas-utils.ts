@@ -146,7 +146,7 @@ export async function canvasConvertToJpeg(
 						: applyExifOrientation(
 								canvas,
 								heicData.exifOrientation
-						  );
+							);
 
 				const jpegBlob = await outputCanvas.convertToBlob( {
 					type: 'image/jpeg',

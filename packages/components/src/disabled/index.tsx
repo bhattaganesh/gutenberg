@@ -65,7 +65,7 @@ function Disabled( {
 								styles.disabled,
 								className,
 								'components-disabled'
-						  )
+							)
 						: undefined
 				}
 				{ ...props }

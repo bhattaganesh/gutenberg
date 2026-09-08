@@ -203,14 +203,14 @@ function RichTextWrapper(
 						/* translators: %s: connected field label or source label */
 						__( 'Add %s' ),
 						bindingKey
-				  );
+					);
 			const _bindingsLabel = _disableBoundBlock
 				? relatedBinding?.args?.key || blockBindingsSource?.label
 				: sprintf(
 						/* translators: %s: source label or key */
 						__( 'Empty %s; start writing to edit its value' ),
 						relatedBinding?.args?.key || blockBindingsSource?.label
-				  );
+					);
 
 			return {
 				disableBoundBlock: _disableBoundBlock,

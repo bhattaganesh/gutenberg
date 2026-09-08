@@ -148,7 +148,7 @@ function BlockCard( {
 												__( 'Go to "%s" block' ),
 												getBlockType( parentBlockName )
 													?.title
-										  )
+											)
 										: __( 'Go to parent block' )
 								}
 								style={
@@ -172,7 +172,7 @@ function BlockCard( {
 								parentClientId
 									? () => {
 											selectBlock( parentClientId );
-									  }
+										}
 									: undefined
 							}
 						>

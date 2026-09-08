@@ -500,7 +500,7 @@ function findInPresetsBy(
 					'blocks',
 					blockName,
 					...presetPath,
-			  ] )
+				] )
 			: undefined,
 		getValueFromObjectPath( settings, presetPath ),
 	].filter( Boolean );
@@ -587,7 +587,7 @@ function getValueFromCustomVariable(
 					blockName,
 					'custom',
 					...path,
-			  ] )
+				] )
 			: undefined ) ??
 		getValueFromObjectPath( features?.settings ?? {}, [
 			'custom',

@@ -136,7 +136,7 @@ export function useWidgetTypes(
 										record.actions,
 										true
 									),
-							  }
+								}
 							: {} ),
 						...recordOverlay( record ),
 					} as WidgetType;
@@ -174,7 +174,7 @@ export function useWidgetTypes(
 									attributes: resolveFields(
 										metadata.attributes
 									),
-							  }
+								}
 							: {} ),
 						icon,
 						/*
@@ -190,7 +190,7 @@ export function useWidgetTypes(
 										actions,
 										actions === record.actions
 									),
-							  }
+								}
 							: {} ),
 						...recordOverlay( record ),
 					} as WidgetType;

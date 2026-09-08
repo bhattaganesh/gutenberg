@@ -95,7 +95,7 @@ function BlockFields( {
 				? replacePatternOverridesDefaultBinding(
 						_attributes.metadata.bindings,
 						bindableAttributes
-				  )
+					)
 				: _attributes.metadata.bindings;
 
 			const { getBlockBindingsSource } = unlock( select( blocksStore ) );
@@ -228,7 +228,7 @@ function BlockFields( {
 								clientId,
 								null /* null to avoid focus on the block in the canvas */
 							);
-					  }
+						}
 					: undefined
 			}
 		>

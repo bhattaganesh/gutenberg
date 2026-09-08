@@ -5,9 +5,8 @@ const actionsCorePath = require.resolve( '@actions/core' );
 const originalActionsCore = require( actionsCorePath );
 const setOutput = vi.fn();
 const hasWordPressProfile = vi.fn();
-const hasWordPressProfilePath = require.resolve(
-	'../../../has-wordpress-profile'
-);
+const hasWordPressProfilePath =
+	require.resolve( '../../../has-wordpress-profile' );
 const originalHasWordPressProfile = require( hasWordPressProfilePath );
 const taskPath = require.resolve( '../' );
 let firstTimeContributorAccountLink;

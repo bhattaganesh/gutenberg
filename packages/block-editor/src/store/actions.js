@@ -337,7 +337,7 @@ export const multiSelect =
 						),
 						blockCount,
 						blockCount + nestedBlockCount
-				  )
+					)
 				: sprintf(
 						/* translators: %s: number of selected blocks */
 						_n(
@@ -346,7 +346,7 @@ export const multiSelect =
 							blockCount
 						),
 						blockCount
-				  ),
+					),
 			'assertive'
 		);
 	};
@@ -1925,7 +1925,7 @@ export const insertBeforeBlock =
 
 		const blockIndex = select.getBlockIndex( clientId );
 		const { defaultBlock: directInsertBlock } = rootClientId
-			? select.getBlockListSettings( rootClientId ) ?? {}
+			? ( select.getBlockListSettings( rootClientId ) ?? {} )
 			: {};
 
 		if ( ! directInsertBlock ) {
@@ -1938,7 +1938,7 @@ export const insertBeforeBlock =
 				? getSiblingBlockAttributes(
 						directInsertBlock.name,
 						select.getBlockAttributes( clientId )
-				  )
+					)
 				: {} ),
 		} );
 		return dispatch.insertBlock( block, blockIndex, rootClientId );
@@ -1959,7 +1959,7 @@ export const insertAfterBlock =
 
 		const blockIndex = select.getBlockIndex( clientId );
 		const { defaultBlock: directInsertBlock } = rootClientId
-			? select.getBlockListSettings( rootClientId ) ?? {}
+			? ( select.getBlockListSettings( rootClientId ) ?? {} )
 			: {};
 
 		if ( ! directInsertBlock ) {
@@ -1976,7 +1976,7 @@ export const insertAfterBlock =
 				? getSiblingBlockAttributes(
 						directInsertBlock.name,
 						select.getBlockAttributes( clientId )
-				  )
+					)
 				: {} ),
 		} );
 		return dispatch.insertBlock( block, blockIndex + 1, rootClientId );
