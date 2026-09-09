@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+### Enhancements
+
+-   Resolvers can define `getResolutionArgs` to derive the resolution arguments from the selector arguments, letting several selector calls share a single resolution ([#XXXXX](https://github.com/WordPress/gutenberg/pull/XXXXX)).
+
 ### Internal
 
 -   Remove unused dependency `use-memo-one` ([#82103](https://github.com/WordPress/gutenberg/pull/82103)).
