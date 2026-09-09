@@ -48,7 +48,7 @@
 		"typeRoots": [
 			"./typings",
 			"./test/unit/typings",
-			"./node_modules/@types"
+			"${configDir}/node_modules/@types"
 		],
 		"types": [],
 
