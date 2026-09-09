@@ -1,19 +1,41 @@
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
+import userEvent from '@testing-library/user-event';
 import { MediaCategoryPanel } from '../media-panel';
 
 globalThis.wpVitest.mockMatchMedia();
 
 // Keep the panel's data + async surface out of the test: return a small,
-// non-empty result set so the grid (and the detach affordance) render.
-vi.mock( import( '../hooks' ), () => ( {
-	useMediaResults: () => ( {
+// non-empty result set so the grid (and the detach affordance) render. The
+// mock is a spy so tests can assert on the query the panel sends.
+const { useMediaResults } = vi.hoisted( () => ( {
+	useMediaResults: vi.fn( () => ( {
 		mediaList: [
 			{ id: 1, title: 'Example', url: 'https://example.com/1' },
 		],
 		isLoading: false,
-	} ),
+	} ) ),
+} ) );
+vi.mock( import( '../hooks' ), () => ( {
+	useMediaResults,
 	useDelayedLoading: () => false,
+} ) );
+
+// Replace the redesigned grid with a marker that reports the actions it was
+// given and lets tests drive its search and paging callbacks.
+vi.mock( import( '../media-grid' ), () => ( {
+	__esModule: true,
+	default: ( { actions, onChangeSearch, onChangePage, page, footer } ) => (
+		<div
+			data-testid="media-grid"
+			data-actions={ actions.map( ( action ) => action.id ).join( ',' ) }
+			data-page={ page }
+		>
+			<button onClick={ () => onChangeSearch( 'sunset' ) }>search</button>
+			<button onClick={ () => onChangePage( 2 ) }>next page</button>
+			{ footer }
+		</div>
+	),
 } ) );
 
 // Replace `MediaList` with a marker that only reports whether it was wired for
@@ -119,5 +141,67 @@ describe( 'MediaCategoryPanel subscription gating', () => {
 		renderPanel( { ...baseCategory, subscribe, isExternalResource: true } );
 
 		expect( subscribe ).not.toHaveBeenCalled();
+	} );
+} );
+
+describe( 'MediaCategoryPanel with the media inserter redesign', () => {
+	beforeEach( () => {
+		window.__experimentalMediaInserter = true;
+		useMediaResults.mockClear();
+	} );
+	afterEach( () => {
+		delete window.__experimentalMediaInserter;
+	} );
+
+	const lastQuery = () => useMediaResults.mock.lastCall[ 1 ];
+
+	it( 'renders the grid with a detach action and the attach button for the Attachments source', () => {
+		renderPanel( baseCategory );
+
+		expect( screen.getByTestId( 'media-grid' ) ).toHaveAttribute(
+			'data-actions',
+			'detach'
+		);
+		expect(
+			screen.getByRole( 'button', { name: 'Attach images' } )
+		).toBeInTheDocument();
+	} );
+
+	it( 'offers a report action instead of detach for an external source', () => {
+		renderPanel( {
+			...baseCategory,
+			isExternalResource: true,
+			getReportUrl: () => 'https://example.com/report',
+		} );
+
+		expect( screen.getByTestId( 'media-grid' ) ).toHaveAttribute(
+			'data-actions',
+			'report'
+		);
+		expect(
+			screen.queryByRole( 'button', { name: 'Attach images' } )
+		).not.toBeInTheDocument();
+	} );
+
+	it( 'queries with the search term and page the grid reports', async () => {
+		const user = userEvent.setup();
+		renderPanel( baseCategory );
+
+		expect( lastQuery() ).toEqual(
+			expect.objectContaining( { page: 1, search: '' } )
+		);
+
+		await user.click( screen.getByRole( 'button', { name: 'next page' } ) );
+		expect( lastQuery() ).toEqual( expect.objectContaining( { page: 2 } ) );
+		expect( screen.getByTestId( 'media-grid' ) ).toHaveAttribute(
+			'data-page',
+			'2'
+		);
+
+		// A new search restarts from the first page.
+		await user.click( screen.getByRole( 'button', { name: 'search' } ) );
+		expect( lastQuery() ).toEqual(
+			expect.objectContaining( { page: 1, search: 'sunset' } )
+		);
 	} );
 } );

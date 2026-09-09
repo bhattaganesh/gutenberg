@@ -768,6 +768,73 @@ $block-inserter-tabs-height: 44px;
 			padding-right: 0;
 		}
 	}
+
+	// The DataViews grid inside the redesigned panel: strip the padding and
+	// surface colour DataViews brings for full-page use so the grid sits flush
+	// in the narrow column, and let the layout container be the scroll host.
+	.block-editor-inserter__media-panel.is-redesign {
+		.dataviews-wrapper {
+			background-color: transparent;
+		}
+
+		.block-editor-inserter__media-grid__search {
+			flex-shrink: 0;
+			padding-bottom: $grid-unit-20;
+
+			.dataviews-search {
+				width: 100%;
+			}
+		}
+
+		.dataviews-view-grid {
+			padding: 0 0 $grid-unit-20;
+		}
+
+		.dataviews-no-results,
+		.dataviews-loading {
+			padding: 0;
+		}
+
+		.block-editor-inserter__media-grid__footer {
+			flex-shrink: 0;
+			padding-top: $grid-unit-20;
+			padding-bottom: $grid-unit-20;
+		}
+
+		.block-editor-inserter__media-grid__date-span {
+			color: $gray-700;
+			font-size: $helptext-font-size;
+		}
+
+		.block-editor-inserter__media-grid__preview {
+			position: relative;
+			width: 100%;
+			height: 100%;
+
+			img,
+			video {
+				display: block;
+				width: 100%;
+				height: 100%;
+				object-fit: contain;
+			}
+
+			audio {
+				width: 100%;
+				position: absolute;
+				bottom: 0;
+			}
+		}
+
+		.block-editor-inserter__media-grid__spinner {
+			position: absolute;
+			inset: 0;
+			display: flex;
+			align-items: center;
+			justify-content: center;
+			background-color: rgba($white, 0.6);
+		}
+	}
 }
 
 .block-editor-inserter-media-tab-media-preview-inserter-external-image-modal {

@@ -5,6 +5,7 @@
 ### Experimental
 
 -   Inserter: Behind the `gutenberg-media-inserter` experiment, render the Media tab as a single column of stacked, collapsible panels, one per media source, in place of the category list and flyout panel ([#TBD](https://github.com/WordPress/gutenberg/pull/TBD)).
+-   Inserter: Behind the `gutenberg-media-inserter` experiment, render each media source as a DataViews grid with search, per-item actions and a pager labelled with the page's date span ([#TBD](https://github.com/WordPress/gutenberg/pull/TBD)).
 
 ### New Features
 

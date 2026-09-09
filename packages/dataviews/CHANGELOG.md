@@ -44,6 +44,7 @@
 
 ### Bug Fixes
 
+-   Grid layout: when the title is hidden (`showTitle: false`) and items are clickable, label each item's clickable media area with its title instead of the generic "Navigate to item" ([#TBD](https://github.com/WordPress/gutenberg/pull/TBD)).
 -   Fix `Field.sort` TypeScript type definition to reflect that `sort` receives extracted field values rather than `Item` objects ([#82162](https://github.com/WordPress/gutenberg/pull/82162)).
 -   DataForm: Render read-only fields without requiring an edit control ([#82514](https://github.com/WordPress/gutenberg/pull/82514)).
 -   Operators: Support the `isAny` and `isNone` filter operators for numeric field values, which previously matched nothing ([#77942](https://github.com/WordPress/gutenberg/pull/77942)).

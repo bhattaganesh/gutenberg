@@ -13,7 +13,9 @@ import { useDispatch } from '@wordpress/data';
 import { getScrollContainer } from '@wordpress/dom';
 import { store as noticesStore } from '@wordpress/notices';
 import { Stack } from '@wordpress/ui';
+import { external, linkOff } from '@wordpress/icons';
 import MediaList from './media-list';
+import MediaGrid from './media-grid';
 import MediaUpload from '../../media-upload';
 import MediaUploadCheck from '../../media-upload/check';
 import { useMediaResults, useDelayedLoading } from './hooks';
@@ -64,8 +66,61 @@ function AttachImagesButton( { onSelect } ) {
 	);
 }
 
+/**
+ * The body of the detach confirmation: shared by the legacy panel's own modal
+ * and the redesigned grid's "Detach" action modal.
+ *
+ * @param {Object}   props
+ * @param {string}   [props.postTypeLabel] Name of the post type, e.g. "Page".
+ * @param {Function} props.onCancel
+ * @param {Function} props.onConfirm
+ */
+function DetachConfirmation( { postTypeLabel, onCancel, onConfirm } ) {
+	const baseCssClass = 'block-editor-inserter__media-panel';
+	return (
+		<>
+			<p>
+				{ postTypeLabel
+					? sprintf(
+							/* translators: %s: Name of the post type e.g: "Page". */
+							__(
+								'Detach this image from the current %s? The image will remain in the Media Library.'
+							),
+							postTypeLabel
+					  )
+					: __(
+							'Detach this image from the current post? The image will remain in the Media Library.'
+					  ) }
+			</p>
+			<div className={ `${ baseCssClass }-detach-actions` }>
+				<Button
+					__next40pxDefaultSize
+					variant="tertiary"
+					onClick={ onCancel }
+				>
+					{ __( 'Cancel' ) }
+				</Button>
+				<Button
+					__next40pxDefaultSize
+					variant="primary"
+					onClick={ onConfirm }
+				>
+					{ __( 'Detach' ) }
+				</Button>
+			</div>
+		</>
+	);
+}
+
 export function MediaCategoryPanel( { rootClientId, onInsert, category } ) {
+	// Behind the `gutenberg-media-inserter` experiment the panel body is a
+	// DataViews grid (see `MediaGrid`); the data, paging and attach/detach
+	// handling below is shared by both renderings.
+	const isMediaInserterRedesign = !! window.__experimentalMediaInserter;
 	const [ search, setSearch, debouncedSearch ] = useDebouncedInput();
+	// The DataViews search input debounces on its own, so the redesigned
+	// panel queries with the value it hands over as-is.
+	const activeSearch = isMediaInserterRedesign ? search : debouncedSearch;
 	const [ page, setPage ] = useState( 1 );
 	// The desktop panel persists across category switches (it's driven by the
 	// selected category, not remounted), so reset paging whenever the source
@@ -73,10 +128,10 @@ export function MediaCategoryPanel( { rootClientId, onInsert, category } ) {
 	// than in an effect) keeps the query on page 1 for the very next fetch,
 	// avoiding a wasted request for the previous page. Mirrors `usePatternsPaging`.
 	const previousCategory = usePrevious( category.name );
-	const previousSearch = usePrevious( debouncedSearch );
+	const previousSearch = usePrevious( activeSearch );
 	if (
 		( previousCategory !== category.name ||
-			previousSearch !== debouncedSearch ) &&
+			previousSearch !== activeSearch ) &&
 		page !== 1
 	) {
 		setPage( 1 );
@@ -85,9 +140,9 @@ export function MediaCategoryPanel( { rootClientId, onInsert, category } ) {
 		() => ( {
 			per_page: MEDIA_ITEMS_PER_PAGE,
 			page,
-			search: debouncedSearch,
+			search: activeSearch,
 		} ),
-		[ page, debouncedSearch ]
+		[ page, activeSearch ]
 	);
 	const [ refreshKey, setRefreshKey ] = useState( 0 );
 	const { mediaList, isLoading, totalItems, totalPages } = useMediaResults(
@@ -250,8 +305,92 @@ export function MediaCategoryPanel( { rootClientId, onInsert, category } ) {
 		handleDetach( media );
 	}, [ handleDetach, mediaPendingDetach ] );
 
+	// Per-item actions for the redesigned grid's card menu. None supports
+	// bulk, so the grid renders no selection checkboxes.
+	const actions = useMemo( () => {
+		const list = [];
+		if ( category.getReportUrl ) {
+			list.push( {
+				id: 'report',
+				label: sprintf(
+					/* translators: %s: The media type to report e.g: "image", "video", "audio" */
+					__( 'Report %s' ),
+					category.mediaType
+				),
+				icon: external,
+				callback: ( [ media ] ) => {
+					window
+						.open( category.getReportUrl( media ), '_blank' )
+						.focus();
+				},
+			} );
+		}
+		if ( detach ) {
+			list.push( {
+				id: 'detach',
+				label: category.postTypeLabel
+					? sprintf(
+							/* translators: %s: Name of the post type e.g: "Page". */
+							__( 'Detach from %s' ),
+							category.postTypeLabel
+					  )
+					: __( 'Detach from post' ),
+				icon: linkOff,
+				modalHeader: __( 'Detach image' ),
+				RenderModal: ( { items, closeModal } ) => (
+					<DetachConfirmation
+						postTypeLabel={ category.postTypeLabel }
+						onCancel={ closeModal }
+						onConfirm={ () => {
+							closeModal?.();
+							handleDetach( items[ 0 ] );
+						} }
+					/>
+				),
+			} );
+		}
+		return list;
+	}, [ category, detach, handleDetach ] );
+
 	const baseCssClass = 'block-editor-inserter__media-panel';
 	const searchLabel = category.labels.search_items || __( 'Search' );
+	const emptyMessage =
+		category.emptyMessage && ! activeSearch
+			? // For a source with a custom empty message (e.g. Attachments)
+			  // and no active search, an empty result means nothing is
+			  // attached yet — clearer than the generic "no results found".
+			  category.emptyMessage
+			: __( 'No results found.' );
+
+	if ( isMediaInserterRedesign ) {
+		return (
+			<div className={ clsx( baseCssClass, 'is-redesign' ) }>
+				<MediaGrid
+					mediaList={ mediaList }
+					isLoading={ isLoading }
+					totalItems={ totalItems }
+					totalPages={ totalPages }
+					page={ page }
+					onChangePage={ changePage }
+					search={ search }
+					onChangeSearch={ setSearch }
+					category={ category }
+					onInsert={ onInsert }
+					actions={ actions }
+					searchLabel={ searchLabel }
+					empty={
+						<InserterNoResults>{ emptyMessage }</InserterNoResults>
+					}
+					footer={
+						attach && (
+							<AttachImagesButton onSelect={ handleAttach } />
+						)
+					}
+				/>
+			</div>
+		);
+	}
+
 	return (
 		<div
 			ref={ scrollContainerRef }
@@ -274,15 +413,7 @@ export function MediaCategoryPanel( { rootClientId, onInsert, category } ) {
 				</div>
 			) }
 			{ ! isLoading && ! mediaList?.length && (
-				<InserterNoResults>
-					{ category.emptyMessage && ! debouncedSearch
-						? // For a source with a custom empty message (e.g.
-						  // Attachments) and no active search, an empty result
-						  // means nothing is attached yet — clearer than the
-						  // generic "no results found".
-						  category.emptyMessage
-						: __( 'No results found.' ) }
-				</InserterNoResults>
+				<InserterNoResults>{ emptyMessage }</InserterNoResults>
 			) }
 			{ !! mediaList?.length && (
 				// Keep the existing items visible while a refetch is in flight,
@@ -338,35 +469,11 @@ export function MediaCategoryPanel( { rootClientId, onInsert, category } ) {
 					onRequestClose={ () => setMediaPendingDetach( undefined ) }
 					overlayClassName={ `${ baseCssClass }-detach-modal` }
 				>
-					<p>
-						{ category.postTypeLabel
-							? sprintf(
-									/* translators: %s: Name of the post type e.g: "Page". */
-									__(
-										'Detach this image from the current %s? The image will remain in the Media Library.'
-									),
-									category.postTypeLabel
-							  )
-							: __(
-									'Detach this image from the current post? The image will remain in the Media Library.'
-							  ) }
-					</p>
-					<div className={ `${ baseCssClass }-detach-actions` }>
-						<Button
-							__next40pxDefaultSize
-							variant="tertiary"
-							onClick={ () => setMediaPendingDetach( undefined ) }
-						>
-							{ __( 'Cancel' ) }
-						</Button>
-						<Button
-							__next40pxDefaultSize
-							variant="primary"
-							onClick={ confirmDetach }
-						>
-							{ __( 'Detach' ) }
-						</Button>
-					</div>
+					<DetachConfirmation
+						postTypeLabel={ category.postTypeLabel }
+						onCancel={ () => setMediaPendingDetach( undefined ) }
+						onConfirm={ confirmDetach }
+					/>
 				</Modal>
 			) }
 		</div>

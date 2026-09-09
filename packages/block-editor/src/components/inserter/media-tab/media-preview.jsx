@@ -13,18 +13,12 @@ import {
 } from '@wordpress/components';
 import { __, sprintf } from '@wordpress/i18n';
 import { useMemo, useCallback, useState } from '@wordpress/element';
-import { cloneBlock } from '@wordpress/blocks';
 import { moreVertical, external, linkOff } from '@wordpress/icons';
-import { useSelect, useDispatch } from '@wordpress/data';
-import { store as noticesStore } from '@wordpress/notices';
-import { isBlobURL } from '@wordpress/blob';
-import { getFilename } from '@wordpress/url';
 import { Tooltip } from '@wordpress/ui';
 import InserterDraggableBlocks from '../../inserter-draggable-blocks';
 import { getBlockAndPreviewFromMedia } from './utils';
-import { store as blockEditorStore } from '../../../store';
+import { useMediaInsert } from './use-media-insert';
 
-const ALLOWED_MEDIA_TYPES = [ 'image' ];
 const MEDIA_OPTIONS_POPOVER_PROPS = {
 	placement: 'bottom-end',
 	className:
@@ -79,7 +73,7 @@ function MediaPreviewOptions( { category, media, onDetach } ) {
 	);
 }
 
-function InsertExternalImageModal( { onClose, onSubmit } ) {
+export function InsertExternalImageModal( { onClose, onSubmit } ) {
 	return (
 		<Modal
 			title={ __( 'Insert external image' ) }
@@ -127,115 +121,23 @@ function InsertExternalImageModal( { onClose, onSubmit } ) {
 }
 
 export function MediaPreview( { media, onClick, onDetach, category } ) {
-	const [ showExternalUploadModal, setShowExternalUploadModal ] =
-		useState( false );
 	const [ isHovered, setIsHovered ] = useState( false );
-	const [ isInserting, setIsInserting ] = useState( false );
 	const [ block, preview ] = useMemo(
 		() => getBlockAndPreviewFromMedia( media, category.mediaType ),
 		[ media, category.mediaType ]
 	);
-	const { createErrorNotice, createSuccessNotice } =
-		useDispatch( noticesStore );
-	const { getSettings, getBlock } = useSelect( blockEditorStore );
-	const { updateBlockAttributes } = useDispatch( blockEditorStore );
-
+	const {
+		insert,
+		insertingId,
+		pendingExternalBlock,
+		confirmExternalInsert,
+		cancelExternalInsert,
+	} = useMediaInsert( onClick );
+	// The hook is per item here, so any in-flight upload is this item's.
+	const isInserting = insertingId !== undefined;
 	const onMediaInsert = useCallback(
-		( previewBlock ) => {
-			// Prevent multiple uploads when we're in the process of inserting.
-			if ( isInserting ) {
-				return;
-			}
-
-			const settings = getSettings();
-			const clonedBlock = cloneBlock( previewBlock );
-			const { id, url, caption } = clonedBlock.attributes;
-
-			// User has no permission to upload media.
-			if ( ! id && ! settings.mediaUpload ) {
-				setShowExternalUploadModal( true );
-				return;
-			}
-
-			// Media item already exists in library, so just insert it.
-			if ( !! id ) {
-				onClick( clonedBlock );
-				return;
-			}
-
-			setIsInserting( true );
-			// Media item does not exist in library, so try to upload it.
-			// Fist fetch the image data. This may fail if the image host
-			// doesn't allow CORS with the domain.
-			// If this happens, we insert the image block using the external
-			// URL and let the user know about the possible implications.
-			window
-				.fetch( url )
-				.then( ( response ) => response.blob() )
-				.then( ( blob ) => {
-					const fileName = getFilename( url ) || 'image.jpg';
-					const file = new File( [ blob ], fileName, {
-						type: blob.type,
-					} );
-
-					settings.mediaUpload( {
-						filesList: [ file ],
-						additionalData: { caption },
-						onFileChange( [ img ] ) {
-							if ( isBlobURL( img.url ) ) {
-								return;
-							}
-
-							if ( ! getBlock( clonedBlock.clientId ) ) {
-								// Ensure the block is only inserted once.
-								onClick( {
-									...clonedBlock,
-									attributes: {
-										...clonedBlock.attributes,
-										id: img.id,
-										url: img.url,
-									},
-								} );
-
-								createSuccessNotice(
-									__( 'Image uploaded and inserted.' ),
-									{ type: 'snackbar', id: 'inserter-notice' }
-								);
-							} else {
-								// For subsequent calls, update the existing block.
-								updateBlockAttributes( clonedBlock.clientId, {
-									...clonedBlock.attributes,
-									id: img.id,
-									url: img.url,
-								} );
-							}
-
-							setIsInserting( false );
-						},
-						allowedTypes: ALLOWED_MEDIA_TYPES,
-						onError( message ) {
-							createErrorNotice( message, {
-								type: 'snackbar',
-								id: 'inserter-notice',
-							} );
-							setIsInserting( false );
-						},
-					} );
-				} )
-				.catch( () => {
-					setShowExternalUploadModal( true );
-					setIsInserting( false );
-				} );
-		},
-		[
-			isInserting,
-			getSettings,
-			onClick,
-			createSuccessNotice,
-			updateBlockAttributes,
-			createErrorNotice,
-			getBlock,
-		]
+		() => insert( block, media.id ?? media.sourceId ),
+		[ insert, block, media.id, media.sourceId ]
 	);
 
 	const title =
@@ -277,9 +179,7 @@ export function MediaPreview( { media, onClick, onDetach, category } ) {
 													className="block-editor-inserter__media-list__item"
 												/>
 											}
-											onClick={ () =>
-												onMediaInsert( block )
-											}
+											onClick={ onMediaInsert }
 										>
 											<div className="block-editor-inserter__media-list__item-preview">
 												{ preview }
@@ -305,17 +205,10 @@ export function MediaPreview( { media, onClick, onDetach, category } ) {
 					</div>
 				) }
 			</InserterDraggableBlocks>
-			{ showExternalUploadModal && (
+			{ pendingExternalBlock && (
 				<InsertExternalImageModal
-					onClose={ () => setShowExternalUploadModal( false ) }
-					onSubmit={ () => {
-						onClick( cloneBlock( block ) );
-						createSuccessNotice( __( 'Image inserted.' ), {
-							type: 'snackbar',
-							id: 'inserter-notice',
-						} );
-						setShowExternalUploadModal( false );
-					} }
+					onClose={ cancelExternalInsert }
+					onSubmit={ confirmExternalInsert }
 				/>
 			) }
 		</>
