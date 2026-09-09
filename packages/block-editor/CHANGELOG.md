@@ -4,6 +4,8 @@
 
 ### New Features
 
+-   Typography: Add a Gradient control that fills the text with a gradient, shown when the block supports `background.gradient` and `background.backgroundClip` ([#77142](https://github.com/WordPress/gutenberg/pull/77142)).
+-   `BackgroundClipControl`: New component for choosing the box a background is painted into. Rendered in the Background panel when a theme sets `settings.background.backgroundClip` ([#77142](https://github.com/WordPress/gutenberg/pull/77142)).
 -   `BackgroundImageControl`: Support setting the background image from a URL, through the URL field in the media replace popover ([#82230](https://github.com/WordPress/gutenberg/pull/82230)).
 
 ### Enhancements

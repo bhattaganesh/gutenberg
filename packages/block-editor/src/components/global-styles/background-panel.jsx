@@ -1,6 +1,9 @@
 import { __experimentalToolsPanel as ToolsPanel } from '@wordpress/components';
 import { useCallback } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
+import BackgroundClipControl, {
+	ALL_BACKGROUND_CLIP_VALUES,
+} from '../background-clip-control';
 import BackgroundImageControl from '../background-image-control';
 import ColorGradientDropdownItem from './color-gradient-dropdown-item';
 import { useHasBackgroundColorPanel } from './color-panel';
@@ -21,6 +24,7 @@ const DEFAULT_CONTROLS = {
 	backgroundImage: true,
 	backgroundColor: true,
 	gradient: true,
+	backgroundClip: false,
 };
 
 /**
@@ -48,8 +52,9 @@ export function useHasBackgroundControl( settings, feature ) {
  */
 export function useHasBackgroundPanel( settings ) {
 	const hasBackgroundColor = useHasBackgroundColorPanel( settings );
-	const { backgroundImage, gradient } = settings?.background || {};
-	return backgroundImage || gradient || hasBackgroundColor;
+	const { backgroundImage, gradient, backgroundClip } =
+		settings?.background || {};
+	return backgroundImage || gradient || backgroundClip || hasBackgroundColor;
 }
 
 /**
@@ -202,17 +207,43 @@ export default function BackgroundImagePanel( {
 		'backgroundImage'
 	);
 
+	// The clip control is only exposed when a theme opts in, either with
+	// `true` for every value or an array naming the ones it wants.
+	const clipSetting = settings?.background?.backgroundClip;
+	let allowedClipValues = [];
+	if ( true === clipSetting ) {
+		allowedClipValues = ALL_BACKGROUND_CLIP_VALUES;
+	} else if ( Array.isArray( clipSetting ) ) {
+		allowedClipValues = clipSetting;
+	}
+	const showBackgroundClipControl = allowedClipValues.length > 0;
+
+	// A gradient clipped to text is a text gradient, which the Typography
+	// panel owns. This panel only treats it as its own when the clip control
+	// has been opted into.
+	const isTextGradient = value?.background?.backgroundClip === 'text';
+
 	const resetAllFilter = useCallback(
 		( previousValue ) => {
 			const clearsColorBackground = showBackgroundColorControl;
 			const clearsColorGradient =
 				hasBackgroundGradientControl || showLegacyColorGradientControl;
+			// Without the clip control, a text gradient belongs to the
+			// Typography panel and must survive a reset here.
+			const prevClip = previousValue?.background?.backgroundClip;
+			const background =
+				! showBackgroundClipControl && 'text' === prevClip
+					? {
+							gradient: previousValue?.background?.gradient,
+							backgroundClip: prevClip,
+					  }
+					: {};
 			if ( ! clearsColorBackground && ! clearsColorGradient ) {
-				return { ...previousValue, background: {} };
+				return { ...previousValue, background };
 			}
 			return {
 				...previousValue,
-				background: {},
+				background,
 				color: {
 					...previousValue?.color,
 					...( clearsColorBackground && { background: undefined } ),
@@ -224,6 +255,7 @@ export default function BackgroundImagePanel( {
 			hasBackgroundGradientControl,
 			showBackgroundColorControl,
 			showLegacyColorGradientControl,
+			showBackgroundClipControl,
 		]
 	);
 
@@ -231,7 +263,8 @@ export default function BackgroundImagePanel( {
 		! showBackgroundImageControl &&
 		! showBackgroundColorControl &&
 		! showBackgroundGradientControl &&
-		! showLegacyColorGradientControl
+		! showLegacyColorGradientControl &&
+		! showBackgroundClipControl
 	) {
 		return null;
 	}
@@ -252,8 +285,22 @@ export default function BackgroundImagePanel( {
 			undefined
 		);
 		newValue = setImmutably( newValue, [ 'color', 'gradient' ], undefined );
+		// Clearing the gradient behind a text clip would leave the text
+		// invisible, so drop the clip with it.
+		if ( isTextGradient ) {
+			newValue = setImmutably(
+				newValue,
+				[ 'background', 'backgroundClip' ],
+				undefined
+			);
+		}
 		onChange( newValue );
 	};
+
+	const resetBackgroundClip = () =>
+		onChange(
+			setImmutably( value, [ 'background', 'backgroundClip' ], undefined )
+		);
 
 	// Non-cascading root values are already dropped from `inheritedValue` by
 	// the builder, so inherited reads below are direct.
@@ -341,6 +388,10 @@ export default function BackgroundImagePanel( {
 	} );
 	const hasLocalBackgroundImage = hasBackgroundImageValue( value );
 
+	const inheritedBackgroundClip = inheritedValue?.background?.backgroundClip;
+	const hasLocalBackgroundClip =
+		value?.background?.backgroundClip !== undefined;
+
 	return (
 		<Wrapper
 			resetAllFilter={ resetAllFilter }
@@ -426,7 +477,9 @@ export default function BackgroundImagePanel( {
 			{ showBackgroundGradientControl && (
 				<ColorGradientDropdownItem
 					label={ __( 'Gradient' ) }
-					hasValue={ () => hasBackgroundGradientValue( value ) }
+					hasValue={ () =>
+						hasBackgroundGradientValue( value ) && ! isTextGradient
+					}
 					resetValue={ resetGradient }
 					isShownByDefault={ defaultControls.gradient }
 					indicators={ [ currentGradient ?? inheritedGradient ] }
@@ -512,6 +565,37 @@ export default function BackgroundImagePanel( {
 					} }
 					panelId={ panelId }
 				/>
+			) }
+			{ showBackgroundClipControl && (
+				<InheritanceToolsPanelItem
+					{ ...inheritanceProps(
+						inheritedBackgroundClip && ! hasLocalBackgroundClip,
+						hasLocalBackgroundClip &&
+							inheritedBackgroundClip !== undefined
+					) }
+					label={ __( 'Clip' ) }
+					hasValue={ () => hasLocalBackgroundClip }
+					onDeselect={ resetBackgroundClip }
+					isShownByDefault={ defaultControls.backgroundClip }
+					panelId={ panelId }
+				>
+					<BackgroundClipControl
+						value={
+							value?.background?.backgroundClip ??
+							inheritedBackgroundClip
+						}
+						onChange={ ( newClip ) =>
+							onChange(
+								setImmutably(
+									value,
+									[ 'background', 'backgroundClip' ],
+									newClip
+								)
+							)
+						}
+						allowedValues={ allowedClipValues }
+					/>
+				</InheritanceToolsPanelItem>
 			) }
 		</Wrapper>
 	);

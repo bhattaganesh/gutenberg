@@ -256,6 +256,7 @@ export function TypographyPanel( {
 			as={ Wrapper }
 			panelId={ clientId }
 			settings={ settings }
+			blockName={ name }
 			value={ value }
 			onChange={ onChange }
 			defaultControls={ defaultControls }
