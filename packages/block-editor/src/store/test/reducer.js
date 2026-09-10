@@ -3003,6 +3003,30 @@ describe( 'state', () => {
 			expect( state.selectionEnd ).toBe( original.selectionEnd );
 		} );
 
+		it( 'should drop the text positions when selecting a block of a cross block selection', () => {
+			const original = deepFreeze( {
+				selectionStart: {
+					clientId: 'ribs',
+					attributeKey: 'content',
+					offset: 11,
+				},
+				selectionEnd: {
+					clientId: 'chicken',
+					attributeKey: 'content',
+					offset: 6,
+				},
+			} );
+			const action = {
+				type: 'SELECT_BLOCK',
+				clientId: 'ribs',
+			};
+			const state = selection( original, action );
+			const expected = { clientId: 'ribs' };
+
+			expect( state.selectionStart ).toEqual( expected );
+			expect( state.selectionEnd ).toEqual( expected );
+		} );
+
 		it( 'should unset selection', () => {
 			const clientId = 'ribs';
 			const original = deepFreeze( {

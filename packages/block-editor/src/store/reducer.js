@@ -1404,6 +1404,18 @@ function selectionHelper( state = {}, action ) {
  */
 export function selection( state = {}, action ) {
 	switch ( action.type ) {
+		case 'SELECT_BLOCK':
+			// Selecting one block of a cross block selection drops the text
+			// positions. Otherwise the start keeps its offset without an end.
+			if (
+				state.selectionStart?.clientId !== state.selectionEnd?.clientId
+			) {
+				return {
+					selectionStart: { clientId: action.clientId },
+					selectionEnd: { clientId: action.clientId },
+				};
+			}
+			break;
 		case 'SELECTION_CHANGE':
 			if ( action.clientId ) {
 				return {
