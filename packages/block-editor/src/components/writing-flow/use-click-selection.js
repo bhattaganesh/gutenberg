@@ -76,7 +76,14 @@ export default function useClickSelection() {
 							);
 						}
 					}
-				} else if ( hasMultiSelection() ) {
+				} else if (
+					hasMultiSelection() &&
+					// A click on text is handled by the selection observer
+					// once the caret lands. Selecting now re-renders the
+					// field mid click; inside the editing host that moves
+					// focus and Chrome drops the caret.
+					! event.target.closest( '[data-wp-block-attribute-key]' )
+				) {
 					// Allow user to escape out of a multi-selection to a
 					// singular selection of a block via click. This is handled
 					// here since focus handling excludes blocks when there is
